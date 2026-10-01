@@ -1,138 +1,87 @@
-# Lab 8 - DuckDB
+# Laboratorio 8 · DuckDB y NYC TLC
 
-Repositorio base del laboratorio 8 del curso **CC3084 - Data Science**
-(Universidad del Valle de Guatemala, Ciclo 2, 2026).
+Análisis reproducible de viajes **Yellow y Green Taxi** en archivos Parquet oficiales de 2024, 2025 y los meses publicados de 2026. Proyecto de **CC3084 · Data Science · Sección 10 · Grupo 1**, Universidad del Valle de Guatemala, segundo semestre de 2026.
 
-Este es el repositorio **proporcionado por el docente**. Contiene la estructura
-del proyecto, el ambiente de ejecucion basado en Docker y un script que descarga
-los datos de **2026**. Todo lo demas debe ser construido por cada equipo.
+| Integrante | Carné |
+|---|---:|
+| Jorge Gabriel Palacios Sales | 231385 |
+| Pablo Daniel Barillas Moreno | 22193 |
+| Roberto Emiliano Otoniel | 23968 |
 
-## Trabajo con fork
+Este trabajo parte del [repositorio docente](https://github.com/menene/duckdb). La entrega solicitada es la **URL del fork del equipo**, con código, consultas, libreta, metodología, benchmark y evidencia del tablero. Los Parquet y la base materializada **no se suben a Git**.
 
-El laboratorio se desarrolla y se entrega sobre un **fork** de este repositorio.
-No se trabaja directamente sobre el repositorio del docente.
+## Resultados en breve
 
-1. Realice un fork de este repositorio:
-   <https://github.com/menene/duckdb>
+- **64 Parquet válidos** y **121,184,384 filas**: 12 meses por servicio en 2024 y 2025, y enero–agosto por servicio en 2026. Corte observado: **1 de octubre de 2026**; los meses restantes de 2026 aún no estaban publicados.
+- **12 consultas SQL** directas sobre Parquet; el catálogo explica su pregunta, filtros, resultado y decisión: [docs/consultas.md](docs/consultas.md).
+- **7 indicadores** en un tablero real de Metabase, con [evidencia](docs/evidencia_metabase.png), más un [tablero HTML](docs/tablero.html) y figuras SVG reproducibles.
+- Benchmark de **3 consultas equivalentes × 3 tamaños × 2 fuentes**, cuatro repeticiones con orden alternado: [resumen](docs/benchmark_resultados.csv) y [mediciones individuales](docs/benchmark_detalle.csv).
+- [Libreta ejecutada](notebooks/lab8_analisis.ipynb) con tablas, gráficos e interpretación; [metodología y discusión](docs/metodologia.md).
 
-2. Clone **su propio fork** (no el del docente):
+## Requisitos y puesta en marcha
 
-   ```bash
-   git clone https://github.com/<su-usuario>/duckdb.git
-   cd duckdb
+Se necesita Docker con Compose, Git, conexión a internet y espacio libre suficiente. Los datos descargados ocupan aproximadamente 2 GB; Docker y la tabla de DuckDB requieren varios GB adicionales. Los servicios se exponen solo en `127.0.0.1`, sin autenticación en Jupyter, por lo que **no deben publicarse en una red externa**.
+
+1. Hacer fork de <https://github.com/menene/duckdb> en GitHub y clonar **el fork propio**. Si ya se trabajó sobre un clon del docente, cambiar `origin` al fork antes de enviar; no hacer `push` al repositorio del docente.
+2. Desde la raíz del proyecto:
+
+   ```powershell
+   docker compose up -d --build
+   docker compose ps
    ```
 
-3. Opcional, para recibir correcciones publicadas por el docente:
+3. Abrir JupyterLab en <http://127.0.0.1:8888/lab> y Metabase en <http://127.0.0.1:3000>. El arranque inicial de Metabase puede tardar unos minutos.
 
-   ```bash
-   git remote add upstream https://github.com/menene/duckdb.git
-   git fetch upstream
-   ```
+El contenedor de análisis se llama `lab8-lab`. Las instrucciones siguientes usan `docker exec`; también pueden ejecutarse dentro de la terminal de JupyterLab sin el prefijo `docker exec lab8-lab`.
 
-Realice commits frecuentes y descriptivos: el historial del repositorio es parte
-de la evaluacion. **La entrega del laboratorio es la URL de su fork.**
+## Reproducir datos y análisis
 
-## Estructura
+```powershell
+# Descarga incremental: no repite archivos existentes.
+docker exec lab8-lab python scripts/download_data.py --years 2024 2025 2026
 
-```text
-duckdb/
-|
-+-- data/
-|   +-- raw/
-|   +-- processed/
-|
-+-- notebooks/
-|
-+-- scripts/
-|
-+-- sql/
-|
-+-- docs/
-|
-+-- Dockerfile
-+-- metabase.Dockerfile
-+-- docker-compose.yml
-+-- README.md
+# Comprueba metadatos Parquet y, con --online, tamaño y disponibilidad remota.
+docker exec lab8-lab python scripts/verify_data.py --online
+
+# Ejecuta las 12 consultas SQL y guarda resultados pequeños como CSV.
+docker exec lab8-lab python scripts/run_analysis.py
+
+# Genera siete SVG y el tablero HTML a partir de esos resultados.
+docker exec lab8-lab python scripts/build_dashboard.py
+
+# Materializa una proyección de seis columnas y realiza el benchmark completo.
+docker exec lab8-lab python scripts/benchmark.py --repetitions 4
+
+# Ejecuta y guarda la libreta con tablas y gráficos visibles.
+docker exec lab8-lab jupyter nbconvert --to notebook --execute --inplace notebooks/lab8_analisis.ipynb --ExecutePreprocessor.timeout=600
 ```
 
-## Requisitos
+La primera materialización se guarda en `data/processed/taxis.duckdb`. Para repetir solo las mediciones **si los Parquet no han cambiado**, use `docker exec lab8-lab python scripts/benchmark.py --repetitions 4 --reuse-table`. Si entra un nuevo mes, vuelva a descargar y ejecutar el flujo completo, **sin** `--reuse-table`; la tabla anterior no incluiría las nuevas filas. `verify_data.py` genera además inventario, resumen y comparación de esquemas en `data/processed/`.
 
-- Docker, con Docker Compose
-- Git
+## Crear el tablero de Metabase
 
-La primera construccion del ambiente descarga varios cientos de MB y puede
-tardar algunos minutos.
+Metabase conserva su estado en un volumen local de Docker; el tablero también puede reconstruirse con código versionado. Después de `run_analysis.py`, use el mismo contenedor de análisis:
 
-Considere el espacio en disco: las imagenes de Docker ocupan unos 3 GB y los
-datos de los tres anios del laboratorio superan 1.5 GB, a los que se suma la
-base materializada del Ejercicio 6. Se recomienda tener al menos 10 GB libres.
+```powershell
+docker exec -e LAB8_METABASE_URL=http://metabase:3000 lab8-lab python scripts/setup_metabase.py
+docker exec -e LAB8_METABASE_URL=http://metabase:3000 lab8-lab python scripts/create_metabase_dashboard.py
+```
 
-## Datos
+Abra la URL del tablero que imprime el segundo comando. En una instalación nueva, `setup_metabase.py` crea una cuenta **solo local** y guarda sus credenciales en `data/processed/metabase_credentials.json`, carpeta excluida de Git. Si Metabase ya estaba configurado, proporcione `LAB8_MB_EMAIL` y `LAB8_MB_PASSWORD` como variables de entorno para esa instancia. Las siete tarjetas consultan los CSV agregados mediante el controlador DuckDB de Metabase; no exponen ni importan los 121 millones de viajes. La configuración del controlador está fijada en `metabase.Dockerfile`.
 
-El repositorio incluye `scripts/download_data.py`, que descarga los archivos de
-2026 publicados por la TLC (`--help` muestra las opciones disponibles). Los
-archivos se guardan en `data/raw/<tipo>/<anio>/`.
+## Estructura y trazabilidad
 
-La TLC publica cada mes con varias semanas de atraso, por lo que los ultimos
-meses de 2026 todavia no existen. El script consulta al servidor que meses estan
-publicados, de modo que vuelve a ejecutarse sin problema conforme aparezcan
-nuevos archivos.
+| Ruta | Propósito |
+|---|---|
+| `scripts/download_data.py`, `scripts/verify_data.py` | Descarga incremental e inventario de integridad. |
+| `scripts/lab8_common.py`, `scripts/run_analysis.py` | Vista temporal sobre Parquet y ejecución de SQL. |
+| `sql/01_*.sql` a `sql/12_*.sql` | Preguntas y filtros reproducibles. |
+| `scripts/benchmark.py`, `docs/benchmark_*.csv` | Comparación Parquet frente a tabla DuckDB y tiempos medidos. |
+| `scripts/build_dashboard.py`, `scripts/create_metabase_dashboard.py` | Indicadores SVG/HTML y tablero Metabase. |
+| `notebooks/lab8_analisis.ipynb` | Exploración, visualizaciones y conclusiones ejecutadas. |
+| `docs/consultas.md`, `docs/metodologia.md` | Catálogo, hallazgos, límites y respuestas de discusión. |
+| `data/raw/`, `data/processed/` | Datos originales y derivados locales, ignorados por Git. |
 
-Los datos descargados **no deben incluirse en el repositorio Git**. El archivo
-`.gitignore` ya esta configurado para evitarlo.
+La vista `trips` usa `read_parquet(..., union_by_name=true, filename=true)` para combinar esquemas y derivar servicio, año y mes del archivo. Los análisis principales consultan Parquet **sin importar previamente los viajes a DuckDB**; solo el benchmark crea una tabla materializada. El corte 2026 es parcial: las comparaciones entre años emplean enero–agosto de cada año, sin atribuir causalidad a las diferencias.
 
-Fuente de datos: NYC TLC Trip Record Data
-<https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page>
-
-Dentro de los contenedores, la carpeta `data/` del proyecto esta montada en
-`/workspace/data`. Esa es la ruta que deben usar las herramientas que corren
-dentro del ambiente, no la ruta de su computadora.
-
-> **Nota sobre DuckDB:** un archivo `.duckdb` admite un solo proceso con permiso
-> de escritura a la vez. Si conecta una herramienta externa a su base de datos,
-> use el modo de solo lectura (`read_only`) en esa conexion; de lo contrario los
-> demas procesos no podran abrir el archivo.
-
-## Material a entregar
-
-Al finalizar, su fork debe contener:
-
-- el codigo fuente modificado y los scripts de descarga;
-- las consultas SQL desarrolladas;
-- el notebook o notebooks utilizados;
-- la documentacion de las consultas;
-- los scripts utilizados para los benchmarks;
-- el codigo de los indicadores y visualizaciones;
-- el tablero o la evidencia del tablero desarrollado;
-- este `README.md`, completado segun la siguiente seccion.
-
-Los archivos de datos descargados **no** deben incluirse.
-
----
-
-# Documentacion del equipo
-
-Las siguientes secciones deben ser completadas por cada equipo. El README final
-debe permitir que una persona que no participo en el desarrollo pueda levantar el
-ambiente, descargar los datos, ejecutar el analisis, reproducir los benchmarks y
-generar los resultados principales.
-
-## Como levantar el ambiente
-
-<!-- TODO (Ejercicio 1.5) -->
-
-## Como descargar los datos
-
-<!-- TODO (Ejercicios 2.6, 5.1 y 8.1) -->
-
-## Como ejecutar el analisis
-
-<!-- TODO -->
-
-## Como reproducir los benchmarks
-
-<!-- TODO (Ejercicio 6) -->
-
-## Como generar los resultados principales
-
-<!-- TODO -->
+**Fuente primaria:** [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page). Las definiciones de columnas y códigos de pago deben comprobarse contra los [diccionarios oficiales](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page). Consulte [docs/metodologia.md](docs/metodologia.md) para las limitaciones y referencias adicionales.

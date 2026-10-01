@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laboratorio 8 · Tablero de taxis NYC</title>
+<style>
+:root{--ink:#17263e;--muted:#617187;--paper:#f3f6f8;--card:#fff;--accent:#176b79;--line:#dce5e9}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.5}
+header{background:linear-gradient(125deg,#10263c,#176b79);color:white;padding:52px max(24px,calc((100vw - 1250px)/2)) 48px}
+header .eyebrow{color:#bfe4e5}h1{font-size:clamp(2rem,4vw,3.4rem);line-height:1.1;margin:12px 0}
+header p{max-width:740px;color:#dcecee}main{max-width:1250px;margin:auto;padding:28px 24px 64px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:-54px;position:relative}
+.stat,.chart-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 9px 26px #12263a0b}
+.stat{padding:22px}.stat strong{display:block;font-size:2rem;color:var(--accent)}.stat span{color:var(--muted)}
+.section-title{margin:38px 0 18px;font-size:1.5rem}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.chart-card{padding:22px}.chart-card h2{margin:7px 0 2px;font-size:1.25rem}.eyebrow{font-size:.72rem;letter-spacing:.1em;font-weight:700;color:var(--accent)}
+.question{margin:0;color:var(--muted)}.chart-card img{display:block;width:100%;height:auto;margin:15px 0}
+.interpretation{border-top:1px solid var(--line);padding-top:13px;margin-bottom:0}code{letter-spacing:0;font-size:.75rem}
+footer{max-width:1250px;margin:auto;padding:0 24px 38px;color:var(--muted);font-size:.9rem}
+@media(max-width:800px){.grid,.stats{grid-template-columns:1fr}.stats{margin-top:18px}}
+</style></head><body>
+<header><div class="eyebrow">UNIVERSIDAD DEL VALLE DE GUATEMALA · CC3084 · DATA SCIENCE</div>
+<h1>NYC Taxi / DuckDB</h1><p>Laboratorio 8 · Grupo 1 · Sección 10. Indicadores derivados de Parquet oficiales de Yellow y Green Taxi para 2024, 2025 y los meses publicados de 2026.</p></header>
+<main><div class="stats"><div class="stat"><strong>121,184,384</strong><span>Registros originales</span></div>
+<div class="stat"><strong>64</strong><span>Archivos mensuales</span></div>
+<div class="stat"><strong>7</strong><span>Indicadores visualizados</span></div></div>
+<h2 class="section-title">Panorama conjunto</h2><div class="grid"><article class="chart-card">
+      <div class="eyebrow">INDICADOR 01 · <code>03_viajes_mensuales.sql</code></div>
+      <h2>Serie mensual de viajes</h2>
+      <p class="question">¿Cuándo cambia la demanda de cada servicio?</p>
+      <img src="figures/01_viajes_mensuales.svg" alt="Serie mensual de viajes">
+      <p class="interpretation">El corte de 2026 termina en agosto; las líneas no extrapolan septiembre-diciembre.</p>
+    </article>
+<article class="chart-card">
+      <div class="eyebrow">INDICADOR 02 · <code>12_comparacion_ene_ago.sql</code></div>
+      <h2>Volumen enero-agosto</h2>
+      <p class="question">¿Cómo cambió la demanda en una ventana común?</p>
+      <img src="figures/02_volumen_comparable.svg" alt="Volumen enero-agosto">
+      <p class="interpretation">Amarillos: +12.6% entre 2024 y 2026; verdes: -24.0%.</p>
+    </article>
+<article class="chart-card">
+      <div class="eyebrow">INDICADOR 03 · <code>12_comparacion_ene_ago.sql</code></div>
+      <h2>Importe medio</h2>
+      <p class="question">¿Cómo evoluciona el importe cobrado por viaje?</p>
+      <img src="figures/03_importe_medio.svg" alt="Importe medio">
+      <p class="interpretation">Importes nominales en USD; la comparación no ajusta por inflación ni mezcla de rutas.</p>
+    </article>
+<article class="chart-card">
+      <div class="eyebrow">INDICADOR 04 · <code>12_comparacion_ene_ago.sql</code></div>
+      <h2>Distancia mediana</h2>
+      <p class="question">¿Cambió la longitud típica de los viajes?</p>
+      <img src="figures/04_distancia_mediana.svg" alt="Distancia mediana">
+      <p class="interpretation">La mediana se calcula sobre distancias positivas y resiste mejor viajes extremos.</p>
+    </article>
+<article class="chart-card">
+      <div class="eyebrow">INDICADOR 05 · <code>12_comparacion_ene_ago.sql</code></div>
+      <h2>Pago con tarjeta</h2>
+      <p class="question">¿Qué fracción de viajes se paga con tarjeta?</p>
+      <img src="figures/05_tarjeta.svg" alt="Pago con tarjeta">
+      <p class="interpretation">El código 1 de payment_type se identifica como tarjeta según el diccionario TLC.</p>
+    </article>
+<article class="chart-card">
+      <div class="eyebrow">INDICADOR 06 · <code>12_comparacion_ene_ago.sql</code></div>
+      <h2>Propinas registradas</h2>
+      <p class="question">¿Qué parte de la tarifa representan las propinas?</p>
+      <img src="figures/06_propinas.svg" alt="Propinas registradas">
+      <p class="interpretation">Se consideran pagos con tarjeta y tarifas positivas; las propinas en efectivo pueden no registrarse.</p>
+    </article>
+<article class="chart-card">
+      <div class="eyebrow">INDICADOR 07 · <code>06_horas.sql</code></div>
+      <h2>Perfil horario</h2>
+      <p class="question">¿A qué hora se concentra la demanda de cada taxi?</p>
+      <img src="figures/07_horas_2026.svg" alt="Perfil horario">
+      <p class="interpretation">Pico amarillo: 18:00; pico verde: 17:00 en 2026.</p>
+    </article></div></main>
+<footer>Fuente: NYC TLC Trip Record Data. Cada gráfico se reproduce con el archivo SQL indicado y scripts/build_dashboard.py. La ventana enero-agosto iguala la cobertura temporal entre años; 2026 no representa un año completo.</footer>
+</body></html>
