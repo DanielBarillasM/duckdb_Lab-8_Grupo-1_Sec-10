@@ -6,7 +6,7 @@
 
 El proyecto usa `data/raw/` para los Parquet originales y `data/processed/` para inventario, CSV resumidos, base DuckDB y credenciales locales; ninguna de esas salidas entra a Git. `scripts/` contiene el flujo ejecutable, `sql/` las consultas, `notebooks/` la exploración narrada y `docs/` resultados y decisiones. Véase [estructura.md](estructura.md).
 
-Docker Compose fija las dependencias de Python y del controlador DuckDB de Metabase, crea rutas montadas coherentes y permite repetir el mismo procedimiento sin depender de paquetes instalados en cada computadora. Se verificaron JupyterLab, Metabase y el driver de DuckDB. **Pendiente externo para la entrega:** crear o confirmar el fork del equipo y cambiar `origin` del clon local, que aún señala al repositorio docente. El código local no debe enviarse al remoto docente.
+Docker Compose fija las dependencias de Python y del controlador DuckDB de Metabase, crea rutas montadas coherentes y permite repetir el mismo procedimiento sin depender de paquetes instalados en cada computadora. Se verificaron JupyterLab, Metabase y el driver de DuckDB. El trabajo se versiona en el fork del equipo ([DanielBarillasM/duckdb_Lab-8_Grupo-1_Sec-10](https://github.com/DanielBarillasM/duckdb_Lab-8_Grupo-1_Sec-10)), que es el `origin` del clon; nada se envía al repositorio docente.
 
 El script docente descargaba inicialmente 2026. Se amplió con `--years` para 2024, 2025 y 2026, conservando el valor por defecto 2026; con `--taxi` para un servicio o ambos; estructura `data/raw/<tipo>/<año>/`; comprobación de existencia antes de descargar; distinción entre HTTP 403/404 de meses no publicados y fallos de red; reintentos; y escritura temporal `.part` antes del renombrado. Las incorporaciones se hicieron en secuencia 2026 → 2024 → 2025, sin borrar ni repetir archivos existentes. La verificación independiente `verify_data.py --online` inspecciona la cabecera Parquet, número de filas, grupos, columnas, tipos y tamaño publicado en el servidor. Resultado del corte: **64/64 archivos publicados presentes y válidos**, **121,184,384 filas**, cero históricos faltantes y cero publicados faltantes. La mera existencia local no sustituye esta auditoría: si un archivo está truncado debe retirarse únicamente ese archivo y volver a descargarlo.
 
@@ -14,7 +14,7 @@ El script docente descargaba inicialmente 2026. Se amplió con `--years` para 20
 
 La vista temporal `trips` en `scripts/lab8_common.py` utiliza `read_parquet` de DuckDB con lista explícita de archivos, `union_by_name=true` y `filename=true`. Deriva `taxi_type`, `file_year` y `file_month` del nombre/ruta del archivo, y unifica la fecha de recogida entre `tpep_pickup_datetime` y `lpep_pickup_datetime`. También proyecta una selección común de importes, distancia, pago, pasajeros y zonas. No altera los Parquet originales y no materializa los 121 millones de viajes para el análisis principal. La libreta muestra `DESCRIBE` y tres filas de cada tipo; `data/processed/esquemas.csv` registra las columnas y tipos de los 64 archivos.
 
-`sql/01_cobertura.sql` cuenta archivos y registros por mes; `02_calidad.sql` audita fechas fuera del año del archivo, nulos y valores no plausibles. En los indicadores de viaje se exige `year(pickup_datetime)=file_year`: hay **157 recogidas fuera de año** entre los 121 millones de registros. Otras exclusiones dependen de la pregunta: distancia positiva para mediana, tarifa positiva y pago con tarjeta para proporción de propinas, duración positiva para duración típica. La auditoría conserva **todas** las filas para no esconder anomalías. En 2026, Yellow registra **7,716,688** valores nulos en `passenger_count` y **952,231** distancias cero; por ello ninguna de esas variables se usa sin su contexto de calidad. Los códigos de pago deben leerse conforme a los [diccionarios de la TLC](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page); el código 0 no se interpreta automáticamente como efectivo.
+`sql/01_cobertura.sql` cuenta archivos y registros por mes; `02_calidad.sql` audita fechas fuera del año del archivo, nulos y valores no plausibles. En los indicadores de viaje se exige `year(pickup_datetime)=file_year`: hay **157 recogidas fuera de año** entre los 121 millones de registros. Otras exclusiones dependen de la pregunta: distancia positiva para mediana, tarifa positiva y pago con tarjeta para proporción de propinas, duración positiva para duración típica. La auditoría conserva **todas** las filas para no esconder anomalías. Las medianas y percentiles usan `quantile_cont` (exacto): `approx_quantile` cambiaba la segunda decimal entre ejecuciones paralelas y rompía la reproducibilidad de las cifras. En 2026, Yellow registra **7,716,688** valores nulos en `passenger_count` y **952,231** distancias cero; por ello ninguna de esas variables se usa sin su contexto de calidad. Los códigos de pago deben leerse conforme a los [diccionarios de la TLC](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page); el código 0 no se interpreta automáticamente como efectivo.
 
 Los detalles de las **12 preguntas** —objetivo, sentencia SQL, archivos de fuente, resultado y decisión— están en [consultas.md](consultas.md) y en `sql/01_*.sql` a `sql/12_*.sql`. Consultar Parquet directamente significa que DuckDB lee columnas, metadatos y grupos de filas del archivo en la consulta, sin una etapa obligatoria de carga a una tabla. Esto evita duplicación inicial y facilita incorporar meses; su costo puede reaparecer en agregaciones complejas repetidas.
 
@@ -25,7 +25,7 @@ La vista y las 12 consultas siguieron funcionando tras sumar 2024 y 2025; `union
 Las 12 preguntas analíticas de [consultas.md](consultas.md) superan el mínimo de 10. Siete indicadores se visualizan conjuntamente en **Metabase**; el código que crea las tarjetas y el tablero está en `scripts/create_metabase_dashboard.py`. Las tarjetas ejecutan SQL en el controlador DuckDB contra **CSV agregados producidos por consultas DuckDB**, evitando reconsultar 121 millones de viajes en cada apertura. `scripts/build_dashboard.py` genera adicionalmente figuras SVG y un HTML estático para revisar el resultado sin depender del estado local de Metabase. [Evidencia del tablero real](evidencia_metabase.png).
 
 | Indicador / pregunta | SQL de origen | Justificación e interpretación |
-|---|---|
+|---|---|---|
 | Viajes mensuales: ¿cómo evoluciona la demanda? | `03_viajes_mensuales.sql` | Revela cobertura y oscilación mensual; 2026 se detiene en agosto, no representa un año completo. |
 | Volumen enero–agosto: ¿cambia por servicio y año? | `12_comparacion_ene_ago.sql` | Mismo periodo para tres años; Yellow 26.39 M → 31.56 M → 29.70 M y Green 443 mil → 398 mil → 337 mil. |
 | Importe medio: ¿cómo cambia el cobro? | `12_comparacion_ene_ago.sql` | USD nominales, no ajustados; Yellow 28.37 → 27.49 → 30.40. No equivale a ingreso neto. |
@@ -38,18 +38,23 @@ Tres patrones visibles con los tres años: (1) Yellow creció de 2024 a 2025 y d
 
 ## 4. Benchmark Parquet frente a tabla DuckDB (ejercicio 6)
 
-`scripts/benchmark.py` crea `trips_materialized` con **las seis columnas exactas** requeridas por las tres consultas representativas: conteo por año/tipo, importe medio mensual y distribución de pagos. La consulta sobre Parquet y la consulta sobre tabla usan la **misma proyección, filtros, agrupaciones y orden**; el programa compara las filas devueltas antes de medir y falla si no son equivalentes. Los escenarios tienen 16 archivos (2026), 40 (2024+2026) y 64 (2024+2025+2026). Cada par se calienta, se mide cuatro veces y alterna qué fuente corre primero; se reporta la mediana, más mínimo/máximo y mediciones individuales. La materialización inicial tardó aproximadamente **27.3 s** y creó una base de alrededor de **0.82 GB** en este equipo; las cifras de consulta no incluyen ese costo. Los [resultados completos](benchmark_resultados.csv) y [detalle por repetición](benchmark_detalle.csv) permiten comprobarlo.
+`scripts/benchmark.py` crea `trips_materialized` con **las seis columnas exactas** requeridas por las tres consultas representativas: conteo por año/tipo, importe medio mensual y distribución de pagos. La consulta sobre Parquet y la consulta sobre tabla usan la **misma proyección, filtros, agrupaciones y orden**; el programa compara las filas devueltas antes de medir y falla si no son equivalentes. Los escenarios tienen 16 archivos (2026), 40 (2024+2026) y 64 (2024+2025+2026). Cada par se calienta, se mide cuatro veces y alterna qué fuente corre primero; se reporta la mediana, más mínimo/máximo y mediciones individuales. En la reproducción del 4 de octubre de 2026 (Docker con 8 núcleos y 4 GB de RAM; DuckDB limitado a 4 hilos), la materialización inicial tardó **9.8 s** y creó una base de **0.83 GB**; las cifras de consulta no incluyen ese costo. Los [resultados completos](benchmark_resultados.csv) y [detalle por repetición](benchmark_detalle.csv) permiten comprobarlo.
 
 | Escenario | Consulta | Parquet (s) | Tabla (s) | Lectura |
 |---|---|---:|---:|---|
-| 2026 | conteo | 0.171 | 0.163 | Casi iguales. |
-| 2026 | importe mensual | 1.796 | 0.587 | Tabla más rápida en repetición. |
-| 2024+2026 | conteo | 0.470 | 0.801 | Parquet más rápido para conteo simple. |
-| 2024+2026 | pagos | 6.305 | 2.017 | Tabla más rápida. |
-| 2024+2025+2026 | importe mensual | 9.832 | 3.491 | Tabla ~2.8 veces más rápida. |
-| 2024+2025+2026 | pagos | 7.750 | 2.734 | Tabla ~2.8 veces más rápida. |
+| 2026 | conteo | 0.045 | 0.058 | Parquet algo más rápido. |
+| 2026 | importe mensual | 0.370 | 0.149 | Tabla ~2.5 veces más rápida. |
+| 2026 | pagos | 0.316 | 0.098 | Tabla ~3.2 veces más rápida. |
+| 2024+2026 | conteo | 0.113 | 0.221 | Parquet ~2 veces más rápido. |
+| 2024+2026 | importe mensual | 1.442 | 0.557 | Tabla ~2.6 veces más rápida. |
+| 2024+2026 | pagos | 0.923 | 0.434 | Tabla ~2.1 veces más rápida. |
+| 2024+2025+2026 | conteo | 0.178 | 0.265 | Parquet ~1.5 veces más rápido. |
+| 2024+2025+2026 | importe mensual | 2.076 | 0.788 | Tabla ~2.6 veces más rápida. |
+| 2024+2025+2026 | pagos | 1.778 | 0.524 | Tabla ~3.4 veces más rápida. |
 
-Los tiempos son de **una computadora y un estado de caché**, no una propiedad universal de los formatos. Parquet es apropiado para consultas ad hoc, crecimiento mensual y cuando se quiere evitar materializar; las tablas convienen para agregaciones repetidas sobre un conjunto relativamente estable, aceptando costo de carga, almacenamiento y reconstrucción. El conteo puede aprovechar metadatos Parquet, lo que ayuda a explicar que no siempre gane la tabla. La comparación de este laboratorio no evalúa concurrencia, compresión, particionado optimizado ni servidores distribuidos.
+Al pasar de 16 a 64 archivos, el tiempo de las agregaciones crece aproximadamente con el volumen en ambas fuentes, y la tabla mantiene una ventaja de 2–3.4 veces. El conteo por año y tipo es la excepción en los tres tamaños: Parquet resulta más rápido. Una medición previa del equipo, en otra computadora, obtuvo tiempos 3–5 veces mayores (materialización de ~27 s), pero la misma conclusión para agregaciones; la diferencia confirma que los valores absolutos dependen del hardware.
+
+Los tiempos son de **una computadora y un estado de caché**, no una propiedad universal de los formatos. Parquet es apropiado para consultas ad hoc, crecimiento mensual y cuando se quiere evitar materializar; las tablas convienen para agregaciones repetidas sobre un conjunto relativamente estable, aceptando costo de carga, almacenamiento y reconstrucción. El conteo solo necesita el nombre de archivo y los recuentos de filas, que Parquet guarda en sus metadatos; eso ayuda a explicar que ahí no gane la tabla. La comparación de este laboratorio no evalúa concurrencia, compresión, particionado optimizado ni servidores distribuidos.
 
 ## 5. Respuestas de discusión (ejercicio 9)
 
@@ -57,7 +62,7 @@ Los tiempos son de **una computadora y un estado de caché**, no una propiedad u
 
 **9.2. Parquet directo.** Evita carga inicial y duplicación, acepta nuevos archivos con cambiar la lista de entrada y permite selección de columnas. En consultas repetidas o que cruzan muchas filas se vuelve a pagar parte de la lectura; hay que vigilar diferencias de esquema y archivos ausentes.
 
-**9.3. Tabla materializada.** Aceleró agregaciones repetidas y ofrece un esquema ya normalizado, pero consumió ~0.82 GB, tardó ~27 s en construirse y debe reconstruirse al añadir meses. Un archivo DuckDB con escritura concurrente también requiere coordinación.
+**9.3. Tabla materializada.** Aceleró agregaciones repetidas y ofrece un esquema ya normalizado, pero consumió ~0.83 GB, tardó ~10 s en construirse en esta máquina y debe reconstruirse al añadir meses. Un archivo DuckDB con escritura concurrente también requiere coordinación.
 
 **9.4. Frente a cargar todo en Pandas.** DuckDB procesa y agrega en el motor SQL; Pandas recibe solo tablas pequeñas para presentación. Esto reduce la necesidad de mantener los 121 millones de viajes como objetos DataFrame en RAM. No significa que DuckDB carezca de límites de memoria o disco.
 
