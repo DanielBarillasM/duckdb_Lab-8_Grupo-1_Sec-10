@@ -6,7 +6,7 @@ Análisis reproducible de viajes **Yellow y Green Taxi** en archivos Parquet ofi
 |---|---:|
 | Jorge Gabriel Palacios Sales | 231385 |
 | Pablo Daniel Barillas Moreno | 22193 |
-| Roberto Emiliano Otoniel | 23968 |
+| Roberto Emiliano Otoniel Camposeco Torres | 23968 |
 
 Este trabajo parte del [repositorio docente](https://github.com/menene/duckdb). La entrega solicitada es la **URL del fork del equipo**, con código, consultas, libreta, metodología, benchmark y evidencia del tablero. Los Parquet y la base materializada **no se suben a Git**.
 
@@ -80,6 +80,7 @@ Abra la URL del tablero que imprime el segundo comando. En una instalación nuev
 | `scripts/build_dashboard.py`, `scripts/create_metabase_dashboard.py` | Indicadores SVG/HTML y tablero Metabase. |
 | `notebooks/lab8_analisis.ipynb` | Exploración, visualizaciones y conclusiones ejecutadas. |
 | `docs/consultas.md`, `docs/metodologia.md` | Catálogo, hallazgos, límites y respuestas de discusión. |
+| `docs/auditoria_rubrica.md` | Mapa de cada ejercicio del enunciado a su evidencia. |
 | `data/raw/`, `data/processed/` | Datos originales y derivados locales, ignorados por Git. |
 
 La vista `trips` usa `read_parquet(..., union_by_name=true, filename=true)` para combinar esquemas y derivar servicio, año y mes del archivo. Los análisis principales consultan Parquet **sin importar previamente los viajes a DuckDB**; solo el benchmark crea una tabla materializada. El corte 2026 es parcial: las comparaciones entre años emplean enero–agosto de cada año, sin atribuir causalidad a las diferencias.
