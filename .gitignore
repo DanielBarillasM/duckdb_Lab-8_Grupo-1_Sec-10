@@ -11,6 +11,15 @@ __pycache__/
 venv/
 .ipynb_checkpoints/
 .playwright-cli/
+tmp/
+
+# Archivos auxiliares de LaTeX (los PDF finales sí se versionan)
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
 
 # Memoria local del plugin memsearch (notas de sesión, rutas personales)
 .memsearch/

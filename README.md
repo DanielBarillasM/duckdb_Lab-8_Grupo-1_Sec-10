@@ -6,7 +6,7 @@ Análisis reproducible de viajes **Yellow y Green Taxi** en archivos Parquet ofi
 |---|---:|
 | Jorge Gabriel Palacios Sales | 231385 |
 | Pablo Daniel Barillas Moreno | 22193 |
-| Roberto Emiliano Otoniel Camposeco Torres | 23968 |
+| Roberto Emiliano Otonie | 23968 |
 
 Este trabajo parte del [repositorio docente](https://github.com/menene/duckdb). La entrega solicitada es la **URL del fork del equipo**, con código, consultas, libreta, metodología, benchmark y evidencia del tablero. Los Parquet y la base materializada **no se suben a Git**.
 
@@ -17,6 +17,7 @@ Este trabajo parte del [repositorio docente](https://github.com/menene/duckdb). 
 - **7 indicadores** en un tablero real de Metabase, con [evidencia](docs/evidencia_metabase.png), más un [tablero HTML](docs/tablero.html) y figuras SVG reproducibles.
 - Benchmark de **3 consultas equivalentes × 3 tamaños × 2 fuentes**, cuatro repeticiones con orden alternado: [resumen](docs/benchmark_resultados.csv) y [mediciones individuales](docs/benchmark_detalle.csv).
 - [Libreta ejecutada](notebooks/lab8_analisis.ipynb) con tablas, gráficos e interpretación; [metodología y discusión](docs/metodologia.md).
+- [Ficha PDF del repositorio](output/pdf/Ficha_Repositorio_Laboratorio_8.pdf) y su [fuente LaTeX](output/pdf/Ficha_Repositorio_Laboratorio_8.tex), listas para presentar el enlace del fork en Canvas.
 
 ## Requisitos y puesta en marcha
 
@@ -81,6 +82,8 @@ Abra la URL del tablero que imprime el segundo comando. En una instalación nuev
 | `notebooks/lab8_analisis.ipynb` | Exploración, visualizaciones y conclusiones ejecutadas. |
 | `docs/consultas.md`, `docs/metodologia.md` | Catálogo, hallazgos, límites y respuestas de discusión. |
 | `docs/auditoria_rubrica.md` | Mapa de cada ejercicio del enunciado a su evidencia. |
+| `docs/checklist_verificacion.md` | Procedimiento de verificación técnica antes de entregar. |
+| `output/pdf/` | Ficha de presentación del fork en formatos LaTeX y PDF. |
 | `data/raw/`, `data/processed/` | Datos originales y derivados locales, ignorados por Git. |
 
 La vista `trips` usa `read_parquet(..., union_by_name=true, filename=true)` para combinar esquemas y derivar servicio, año y mes del archivo. Los análisis principales consultan Parquet **sin importar previamente los viajes a DuckDB**; solo el benchmark crea una tabla materializada. El corte 2026 es parcial: las comparaciones entre años emplean enero–agosto de cada año, sin atribuir causalidad a las diferencias.

@@ -37,7 +37,7 @@ def build() -> None:
         <div class="lab8-hero"><div class="lab8-kicker">UNIVERSIDAD DEL VALLE DE GUATEMALA · CC3084 · GRUPO 1 · SECCIÓN 10</div>
         <h1>Laboratorio 8 · DuckDB</h1><p>Análisis incremental de Yellow y Green Taxi · NYC TLC · 2024–2026</p></div>
 
-        **Integrantes:** Jorge Gabriel Palacios Sales (231385), Pablo Daniel Barillas Moreno (22193) y Roberto Emiliano Otoniel (23968).
+        **Integrantes:** Jorge Gabriel Palacios Sales (231385), Pablo Daniel Barillas Moreno (22193) y Roberto Emiliano Otonie (23968).
 
         **Objetivo.** Consultar Parquet directamente, analizar viajes y calidad, incorporar años sin rehacer el flujo, comparar consultas con una tabla DuckDB y comunicar siete indicadores.
         """),

@@ -1,0 +1,105 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1.8cm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{hyperref}
+
+\definecolor{navy}{HTML}{142A43}
+\definecolor{teal}{HTML}{13806D}
+\definecolor{gold}{HTML}{D99A1B}
+\definecolor{mist}{HTML}{EDF4F5}
+\definecolor{ink}{HTML}{263746}
+
+\hypersetup{
+  colorlinks=true,
+  urlcolor=teal,
+  linkcolor=teal,
+  pdfauthor={Grupo 1 - CC3084 Data Science},
+  pdftitle={Ficha de repositorio - Laboratorio 8 DuckDB}
+}
+
+\pagestyle{empty}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\newcommand{\labeltext}[1]{\textcolor{teal}{\bfseries\MakeUppercase{#1}}}
+
+\begin{document}
+
+\begin{minipage}[t]{0.68\textwidth}
+  {\color{teal}\bfseries\large UNIVERSIDAD DEL VALLE DE GUATEMALA}\par
+  {\color{ink}CC3084 - Data Science \textbar{} Sección 10 \textbar{} Grupo 1}\par
+  {\color{ink}Segundo semestre 2026}
+\end{minipage}%
+\begin{minipage}[t]{0.32\textwidth}
+  \raggedleft
+  \colorbox{navy}{\parbox{0.76\linewidth}{\centering\color{white}\bfseries LABORATORIO 8\\[2pt]\normalsize DUCKDB}}
+\end{minipage}
+
+\vspace{8pt}
+{\color{gold}\rule{\textwidth}{3pt}}
+
+\vspace{10pt}
+{\fontsize{25}{29}\selectfont\color{navy}\bfseries Análisis escalable de viajes NYC TLC}\par
+{\large\color{teal}Yellow y Green Taxi - 2024, 2025 y corte parcial de 2026}
+
+\vspace{10pt}
+\colorbox{mist}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
+    \vspace{7pt}
+    \labeltext{Fork oficial del equipo}\par
+    \vspace{3pt}
+    \url{https://github.com/DanielBarillasM/duckdb_Lab-8_Grupo-1_Sec-10}
+    \vspace{7pt}
+  }%
+}
+
+\vspace{12pt}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{navy}}X >{\raggedleft\arraybackslash}p{2.8cm}}
+Integrante & Carné \\
+Jorge Gabriel Palacios Sales & 231385 \\
+Pablo Daniel Barillas Moreno & 22193 \\
+Roberto Emiliano Otonie & 23968 \\
+\end{tabularx}
+
+\vspace{12pt}
+\begin{minipage}[t]{0.48\textwidth}
+  \labeltext{Contenido del repositorio}
+  \begin{itemize}
+    \item Descarga incremental de datos oficiales de NYC TLC.
+    \item Doce consultas SQL directas sobre archivos Parquet.
+    \item Notebook ejecutado con resultados y visualizaciones.
+    \item Benchmark Parquet frente a tabla DuckDB.
+    \item Siete indicadores y tablero reproducible en Metabase.
+  \end{itemize}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+  \labeltext{Reproducibilidad}
+  \begin{itemize}
+    \item Entorno definido mediante Docker Compose.
+    \item Dependencias y transformaciones versionadas.
+    \item Documentación completa en el README.
+    \item Datos y credenciales excluidos del repositorio Git.
+    \item Evidencia y mapa de cumplimiento de la rúbrica.
+  \end{itemize}
+\end{minipage}
+
+\vfill
+\colorbox{navy}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
+    \vspace{7pt}
+    \centering\color{white}
+    \textbf{Material de entrega}\par
+    El enlace anterior conduce al fork versionado con el código, consultas, libreta, documentación, benchmark y evidencia del tablero.
+    \vspace{7pt}
+  }%
+}
+
+\end{document}
